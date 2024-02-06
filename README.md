@@ -1,0 +1,2 @@
+# gobang
+Simple AI gobang.
