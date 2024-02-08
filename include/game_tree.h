@@ -2,6 +2,7 @@
 #define GOBANG_GAME_TREE_H
 
 #include <unordered_map>
+#include <unordered_set>
 #include <cstdint>
 #include <climits>
 #include "evaluate.h"
@@ -14,9 +15,8 @@ struct Node {
     long long key = 0;
     int value = 0;
     int alpha = INT_MIN, beta = INT_MAX;
+    bool ignore = false; // when prune
     std::unordered_set<Node *> son;
-    Node *select = nullptr;
-    int depth;
 
     explicit Node(NODE_CATE init_cate);
 
@@ -37,14 +37,12 @@ private:
 
     inline Node *new_node(Node *father, int id);
 
-    void reduce_depth(Node *cur_root,int depth);
-
 public:
     explicit Game_tree(NODE_CATE init_node);
 
     ~Game_tree();
 
-    void min_max_search(Node *cur_node);
+    void min_max_search(Node *cur_node, int depth = 0);
 
     void AI_next_status(); // AI selection
 

@@ -28,6 +28,24 @@ int Evaluator::get_score(std::unordered_map<int, PIECE_TYPE> &board) {
     if (ai_five) {
         return INT_MAX;
     }
+//    if (player_four_active) {
+//        return INT_MIN + 1;
+//    }
+//    if (ai_four_active) {
+//        return INT_MAX - 1;
+//    }
+//    if (player_four_sleep >= 2) {
+//        return INT_MIN + 2;
+//    }
+//    if (ai_four_sleep >= 2) {
+//        return INT_MAX - 2;
+//    }
+//    if (player_four_sleep && player_three_active) {
+//        return INT_MIN + 3;
+//    }
+//    if (ai_four_sleep && ai_three_active) {
+//        return INT_MAX - 3;
+//    }
     return (-player_four_active + ai_four_active) * SCORE_FOUR_ACTIVE + (-player_four_sleep + ai_four_sleep) * SCORE_FOUR_SLEEP +
            (-player_three_active + ai_three_active) * SCORE_THREE_ACTIVE + (-player_three_sleep + ai_three_sleep) * SCORE_THREE_SLEEP +
            (-player_two_active + ai_two_active) * SCORE_TWO_ACTIVE + (-player_two_sleep + ai_two_sleep) * SCORE_TWO_SLEEP;

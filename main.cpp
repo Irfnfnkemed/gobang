@@ -3,7 +3,7 @@
 
 
 int main() {
-    Game_tree gameTree(AI_PIECE);
+    Game_tree gameTree(MIN_NODE);
     gameTree.player_next_status((8 << 4) + 8);
     gameTree.print_board();
     while (true) {
