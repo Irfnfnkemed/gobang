@@ -13,10 +13,9 @@ struct Node {
     NODE_CATE node_cate;
     std::unordered_map<int, PIECE_TYPE> board;
     long long key = 0;
-    int value = 0;
+    int node_value = INT_MIN, board_value = INT_MIN;
     int alpha = INT_MIN, beta = INT_MAX;
-    bool ignore = false; // when prune
-    std::unordered_set<Node *> son;
+    std::vector<Node *> son;
 
     explicit Node(NODE_CATE init_cate);
 
@@ -27,18 +26,22 @@ struct Node {
 };
 
 class Game_tree {
-private:
-    Node *root;
+public:
+    Node *root, *next_root = nullptr;
+    int next_pos;
     Evaluator evaluator;
-    Hash_map<Node> hash_map;
+    Hash_map hash_map;
     std::vector<Node *> collect;
+    int search_depth;
 
-    static inline void set_alpha_beta(Node *father, Node *son);
+    inline void set_alpha_beta(Node *father, Node *son);
 
     inline Node *new_node(Node *father, int id);
 
+    void free();
+
 public:
-    explicit Game_tree(NODE_CATE init_node);
+    explicit Game_tree(NODE_CATE init_node, int search_depth = SEARCH_DEPTH);
 
     ~Game_tree();
 
@@ -49,6 +52,12 @@ public:
     void player_next_status(int pos); // player selection
 
     void print_board();
+
+    int get_pos() const;
+
+    bool win() const;
+
+    bool lose() const;
 
 
 };

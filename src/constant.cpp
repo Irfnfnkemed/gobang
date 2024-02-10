@@ -17,8 +17,8 @@ const int BOARD_WIDTH = 15;
 const int MIN_POS_ID = 0b00010001;
 const int MAX_POS_ID = 0b11111111;
 
-const int SEARCH_DEPTH = 3;
-const int PLACE_RANGE = 2;
+const int SEARCH_DEPTH = 4;
+const int PLACE_RANGE = 1;
 
 const int SCORE_FIVE = 10000000;
 const int SCORE_FOUR_ACTIVE = 500000;

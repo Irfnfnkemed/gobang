@@ -9,7 +9,8 @@ inline bool Evaluator::match(PIECE_TYPE piece_type, int target_piece, int target
     }
 }
 
-int Evaluator::get_score(std::unordered_map<int, PIECE_TYPE> &board) {
+int Evaluator::get_score(std::unordered_map<int, PIECE_TYPE> &board, NODE_CATE node_cate_) {
+    node_cate = node_cate_;
     player_five = player_four_active = player_four_sleep =
     player_three_active = player_three_sleep = player_two_active = player_two_sleep =
     ai_five = ai_four_active = ai_four_sleep =
@@ -23,32 +24,42 @@ int Evaluator::get_score(std::unordered_map<int, PIECE_TYPE> &board) {
         }
     }
     if (player_five) {
-        return INT_MIN;
+        return score = INT_MIN + 2;
     }
     if (ai_five) {
-        return INT_MAX;
+        return score = INT_MAX - 2;
     }
-//    if (player_four_active) {
-//        return INT_MIN + 1;
-//    }
-//    if (ai_four_active) {
-//        return INT_MAX - 1;
-//    }
-//    if (player_four_sleep >= 2) {
-//        return INT_MIN + 2;
-//    }
-//    if (ai_four_sleep >= 2) {
-//        return INT_MAX - 2;
-//    }
-//    if (player_four_sleep && player_three_active) {
-//        return INT_MIN + 3;
-//    }
-//    if (ai_four_sleep && ai_three_active) {
-//        return INT_MAX - 3;
-//    }
-    return (-player_four_active + ai_four_active) * SCORE_FOUR_ACTIVE + (-player_four_sleep + ai_four_sleep) * SCORE_FOUR_SLEEP +
-           (-player_three_active + ai_three_active) * SCORE_THREE_ACTIVE + (-player_three_sleep + ai_three_sleep) * SCORE_THREE_SLEEP +
-           (-player_two_active + ai_two_active) * SCORE_TWO_ACTIVE + (-player_two_sleep + ai_two_sleep) * SCORE_TWO_SLEEP;
+    if (node_cate == MAX_NODE) {
+        if (ai_four_active || ai_four_sleep) {
+            return score = INT_MAX - 3;
+        }
+        if (player_four_active || player_four_sleep >= 2) {
+            return score = INT_MIN + 3;
+        }
+        if (ai_three_active >= 2) {
+            return score = INT_MAX - 4;
+        }
+        if ((player_four_sleep && player_three_active) || player_three_active >= 2) {
+            return score = INT_MIN + 4;
+        }
+    } else {
+        if (player_four_active || player_four_sleep) {
+            return score = INT_MIN + 3;
+        }
+        if (ai_four_active || ai_four_sleep >= 2) {
+            return score = INT_MAX - 4;
+        }
+        if (player_three_active >= 2) {
+            return score = INT_MIN + 4;
+        }
+        if ((ai_four_sleep && ai_three_active) || ai_three_active >= 2) {
+            return score = INT_MAX - 4;
+        }
+    }
+
+    return score = (-player_four_active + ai_four_active) * SCORE_FOUR_ACTIVE + (-player_four_sleep + ai_four_sleep) * SCORE_FOUR_SLEEP +
+                   (-player_three_active + ai_three_active) * SCORE_THREE_ACTIVE + (-player_three_sleep + ai_three_sleep) * SCORE_THREE_SLEEP +
+                   (-player_two_active + ai_two_active) * SCORE_TWO_ACTIVE + (-player_two_sleep + ai_two_sleep) * SCORE_TWO_SLEEP;
 }
 
 void Evaluator::set_piece(std::unordered_map<int, PIECE_TYPE> &board) {
@@ -136,3 +147,14 @@ void Evaluator::evaluate() {
         ++ai_two_active;
     }
 }
+
+bool Evaluator::effective() {
+    if (node_cate == MAX_NODE) {
+        return score <= INT_MIN + 4 || player_three_active || player_three_sleep || player_two_active;
+    } else {
+        return score >= INT_MAX - 4 || ai_three_active || ai_three_sleep || ai_two_active;
+    }
+}
+
+
+

@@ -2,15 +2,16 @@
 #define GOBANG_ZOBRIST_HASH_H
 
 #include <unordered_map>
+#include <queue>
 #include <random>
 #include <climits>
 #include "constant.h"
 
-template<typename T>
 class Hash_map {
 private:
+    int now_depth = 0;
     long long zobrist[256][2];
-    std::unordered_map<long long, T *> map;
+    std::unordered_map<long long, std::queue<std::pair<int, int>>> map;
 
 public:
     Hash_map() {
@@ -27,27 +28,39 @@ public:
         return pre_key ^ zobrist[pos][type];
     }
 
-    T *find(long long key) {
+    int find(long long key, int min_depth) {
+        min_depth += now_depth;
         auto iter = map.find(key);
-        if (iter != map.end()) {
-            return iter->second;
+        if (iter == map.end()) {
+            return INT_MIN;
         } else {
-            return nullptr;
+            while (!iter->second.empty()) {
+                if (iter->second.front().first < min_depth) {
+                    iter->second.pop();
+                } else {
+                    return iter->second.front().second;
+                }
+            }
+            return INT_MIN;
         }
     }
 
-    void insert(long long key, T *value) {
-        map[key] = value;
+    void insert(long long key, int depth, int value) {
+        map[key].push(std::make_pair(depth + now_depth, value));
     }
 
-    bool erase(long long key) {
-        auto iter = map.find(key);
-        if (iter != map.end()) {
-            return map.erase(iter->first);
-        } else {
-            return false;
-        }
+    void next_step() {
+        ++now_depth;
     }
+
+//    bool erase(long long key) {
+//        auto iter = map.find(key);
+//        if (iter != map.end()) {
+//            return map.erase(iter->first);
+//        } else {
+//            return false;
+//        }
+//    }
 
 };
 
