@@ -15,18 +15,18 @@ int main() {
         gameTree.print_board();
     }
 
-    Game_tree A(MIN_NODE, 4);
-    Game_tree P(MAX_NODE, 2);
+    Game_tree A(MIN_NODE, 6);
+    Game_tree P(MAX_NODE, 6);
     int i = 0;
     while (true) {
-        std::cout << i++ << std::endl;
+        std::cout << std::dec << i++ << std::endl;
         P.AI_next_status();
         A.player_next_status(P.get_pos());
         A.print_board();
         if (A.win() || A.lose()) {
             break;
         }
-        std::cout << i++ << std::endl;
+        std::cout << std::dec << i++ << std::endl;
         A.AI_next_status();
         P.player_next_status(A.get_pos());
         A.print_board();

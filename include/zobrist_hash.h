@@ -11,7 +11,8 @@ class Hash_map {
 private:
     int now_depth = 0;
     long long zobrist[256][2];
-    std::unordered_map<long long, std::queue<std::pair<int, int>>> map;
+    std::unordered_map<long long, std::queue<std::pair<int, int>>> node_score;
+    std::unordered_map<long long, int> board_score;
 
 public:
     Hash_map() {
@@ -28,10 +29,10 @@ public:
         return pre_key ^ zobrist[pos][type];
     }
 
-    int find(long long key, int min_depth) {
+    int find_node(long long key, int min_depth) {
         min_depth += now_depth;
-        auto iter = map.find(key);
-        if (iter == map.end()) {
+        auto iter = node_score.find(key);
+        if (iter == node_score.end()) {
             return INT_MIN;
         } else {
             while (!iter->second.empty()) {
@@ -45,8 +46,16 @@ public:
         }
     }
 
-    void insert(long long key, int depth, int value) {
-        map[key].push(std::make_pair(depth + now_depth, value));
+    int find_board(long long key) {
+        return board_score[key];
+    }
+
+    void insert_node_score(long long key, int depth, int value) {
+        node_score[key].push(std::make_pair(depth + now_depth, value));
+    }
+
+    void insert_board_score(long long key, int value) {
+        board_score[key] = value;
     }
 
     void next_step() {

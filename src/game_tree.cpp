@@ -3,20 +3,8 @@
 #include <algorithm>
 #include "Game_tree.h"
 
-Node::Node(NODE_CATE init_cate) {
-    node_cate = init_cate;
-}
 
-Node::Node(Node *father, int id) {
-    node_cate = !(father->node_cate);
-    board = father->board;
-    board[id] = node_cate; // add new piece
-    alpha = father->alpha;
-    beta = father->beta;
-}
-
-
-Game_tree::Game_tree(NODE_CATE init_node, int search_depth_) {
+Game_tree::Game_tree(NODE_CATE init_node, int search_depth_) : evaluator(&hash_map) {
     root = new Node(init_node);
     collect.push_back(root);
     search_depth = search_depth_;
@@ -46,11 +34,12 @@ inline void Game_tree::set_alpha_beta(Node *father, Node *son) {
     }
 }
 
-Node *Game_tree::new_node(Node *father, int id) {
-    Node *tmp = new Node(father, id);
-    tmp->key = hash_map.get_key(father->key, id, !(father->node_cate));
-    tmp->node_value = hash_map.find(tmp->key, search_depth);
-    tmp->board_value = evaluator.get_score(tmp->board, tmp->node_cate);
+Node *Game_tree::new_node(Node *father, int pos) {
+    Node *tmp = new Node(father, pos);
+    tmp->key = hash_map.get_key(father->key, pos, !(father->node_cate));
+    tmp->node_value = hash_map.find_node(tmp->key, search_depth);
+    tmp->board_value = evaluator.evaluate_board(tmp);
+    tmp->pos_value = evaluator.evaluate_pos(pos);
     collect.push_back(tmp);
     return tmp;
 }
@@ -67,19 +56,19 @@ void Game_tree::free() {
 
 bool cmp(Node *a, Node *b) {
     if (a->node_cate == MAX_NODE) {
-        return a->board_value < b->board_value;
+        return a->pos_value < b->pos_value;
     } else {
-        return a->board_value > b->board_value;
+        return a->pos_value > b->pos_value;
     }
 }
 
 
 void Game_tree::min_max_search(Node *cur_node, int depth) {
-    if (cur_node->node_value == INT_MAX - 2 || cur_node->node_value == INT_MIN + 2 ||
-        cur_node->node_value == INT_MAX - 3 || cur_node->node_value == INT_MIN + 3 ||
-        cur_node->node_value == INT_MAX - 4 || cur_node->node_value == INT_MIN + 4) {
+    if (cur_node->node_value == INT_MAX - SCORE_FIVE || cur_node->node_value == INT_MIN + SCORE_FIVE ||
+        cur_node->node_value == INT_MAX - 2 * SCORE_FIVE || cur_node->node_value == INT_MIN + 2 * SCORE_FIVE ||
+        cur_node->node_value == INT_MAX - 3 * SCORE_FIVE || cur_node->node_value == INT_MIN + 3 * SCORE_FIVE) {
         cur_node->alpha = cur_node->beta = cur_node->node_value;
-        hash_map.insert(cur_node->key, search_depth, cur_node->node_value);
+        hash_map.insert_node_score(cur_node->key, search_depth, cur_node->node_value);
         return;
     }
     if (depth < search_depth) {
@@ -102,22 +91,45 @@ void Game_tree::min_max_search(Node *cur_node, int depth) {
         if (son_board_id.empty()) {
             son_board_id.insert((8 << 4) | 8); // init status
         }
-        Node *now_node;
+        Node *son_node;
         for (int pos: son_board_id) {
-            now_node = new_node(cur_node, pos);
-            if (evaluator.effective()) {
-                cur_node->son.push_back(now_node);
-            }
-        }
-        if (cur_node->son.empty()) {
-            for (int pos: son_board_id) {
-                now_node = new_node(cur_node, pos);
-                cur_node->son.push_back(now_node);
-            }
+            son_node = new_node(cur_node, pos);
+            cur_node->son.push_back(son_node);
         }
         std::sort(cur_node->son.begin(), cur_node->son.end(), cmp);
+        int bound = INT_MIN;
+        if (cur_node->node_cate == MAX_NODE) {
+            if (cur_node->son[0]->pos_value >= SCORE_FIVE) {
+                bound = SCORE_FIVE;
+            } else if (cur_node->son[0]->pos_value >= SCORE_THREE_SLEEP) {
+                bound = SCORE_THREE_SLEEP;
+            } else if (cur_node->son[0]->pos_value >= SCORE_TWO_ACTIVE) {
+                bound = SCORE_TWO_ACTIVE;
+            } else {
+                bound = 0;
+            }
+        } else {
+            if (cur_node->son[0]->pos_value <= -SCORE_FIVE) {
+                bound = -SCORE_FIVE;
+            } else if (cur_node->son[0]->pos_value <= -SCORE_THREE_SLEEP) {
+                bound = -SCORE_THREE_SLEEP;
+            } else if (cur_node->son[0]->pos_value <= SCORE_TWO_ACTIVE) {
+                bound = -SCORE_TWO_ACTIVE;
+            } else {
+                bound = 0;
+            }
+        }
         int size = son_board_id.size();
         for (Node *now_node: cur_node->son) {
+            if (cur_node->node_cate == MAX_NODE) {
+                if (now_node->pos_value < bound) {
+                    break;
+                }
+            } else {
+                if (now_node->pos_value > bound) {
+                    break;
+                }
+            }
             --size;
             if (now_node->node_value == INT_MIN) {
                 now_node->alpha = cur_node->alpha;
@@ -142,11 +154,11 @@ void Game_tree::min_max_search(Node *cur_node, int depth) {
             cur_node->node_value = cur_node->alpha = cur_node->beta;
         }
         if (cur_node->node_value != INT_MAX - 1 && cur_node->node_value != INT_MIN + 1) {
-            hash_map.insert(cur_node->key, search_depth, cur_node->node_value);
+            hash_map.insert_node_score(cur_node->key, search_depth, cur_node->node_value);
         }
     } else {
         cur_node->node_value = cur_node->alpha = cur_node->beta = cur_node->board_value;
-        hash_map.insert(cur_node->key, search_depth, cur_node->node_value);
+        hash_map.insert_node_score(cur_node->key, search_depth, cur_node->node_value);
     }
 }
 
@@ -158,19 +170,20 @@ void Game_tree::AI_next_status() {
         root->beta = INT_MAX;
         root->node_value = INT_MIN;
         min_max_search(root);
-        if (root->node_value == INT_MAX - 2) {
+        if (root->node_value == INT_MAX - SCORE_FIVE) {
             for (Node *tmp: root->son) {
-                if (tmp->board_value == INT_MAX - 2) {
+                if (tmp->board_value == INT_MAX - SCORE_FIVE) {
                     next_root = tmp;
                 }
                 break;
             }
         }
-        if (root->node_value == INT_MAX - 2 || root->node_value == INT_MIN + 2 ||
-            root->node_value == INT_MAX - 3 || root->node_value == INT_MIN + 3 ||
-            root->node_value == INT_MAX - 4 || root->node_value == INT_MIN + 4) {
+        if (root->node_value == INT_MAX - SCORE_FIVE || root->node_value == INT_MIN + SCORE_FIVE ||
+            root->node_value == INT_MAX - 2 * SCORE_FIVE || root->node_value == INT_MIN + 2 * SCORE_FIVE ||
+            root->node_value == INT_MAX - 3 * SCORE_FIVE || root->node_value == INT_MIN + 3 * SCORE_FIVE) {
             break;
         }
+
     }
     search_depth = max_search_depth;
     for (auto &iter: next_root->board) {
@@ -225,9 +238,9 @@ int Game_tree::get_pos() const {
 }
 
 bool Game_tree::win() const {
-    return root->board_value == INT_MAX - 2;
+    return root->board_value == INT_MAX - SCORE_FIVE;
 }
 
 bool Game_tree::lose() const {
-    return root->board_value == INT_MIN + 2;
+    return root->board_value == INT_MIN + SCORE_FIVE;
 }
