@@ -27,6 +27,9 @@ extern const int SEARCH_DEPTH;
 
 extern const int PLACE_RANGE;
 
+extern const int SCORE_KILL_ONE;
+extern const int SCORE_KILL_TWO;
+extern const int SCORE_KILL_THREE;
 extern const int SCORE_FIVE;
 extern const int SCORE_FOUR_ACTIVE;
 extern const int SCORE_FOUR_SLEEP;

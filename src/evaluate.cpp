@@ -86,36 +86,36 @@ void Evaluator::set_piece(int now_pos_) {
 
 int Evaluator::get_score() {
     if (player_five) {
-        return INT_MIN + SCORE_FIVE;
+        return -SCORE_KILL_ONE;
     }
     if (ai_five) {
-        return INT_MAX - SCORE_FIVE;
+        return SCORE_KILL_ONE;
     }
     if (node->node_cate == MAX_NODE) {
         if (ai_four_active || ai_four_sleep) {
-            return INT_MAX - 2 * SCORE_FIVE;
+            return SCORE_KILL_TWO;
         }
         if (player_four_active || player_four_sleep >= 2) {
-            return INT_MIN + 2 * SCORE_FIVE;
+            return -SCORE_KILL_TWO;
         }
         if (ai_three_active) {
-            return INT_MAX - 3 * SCORE_FIVE;
+            return SCORE_KILL_THREE;
         }
         if ((player_four_sleep && player_three_active) || player_three_active >= 2) {
-            return INT_MIN + 3 * SCORE_FIVE;
+            return -SCORE_KILL_THREE;
         }
     } else {
         if (player_four_active || player_four_sleep) {
-            return INT_MIN + 2 * SCORE_FIVE;
+            return -SCORE_KILL_TWO;
         }
         if (ai_four_active || ai_four_sleep >= 2) {
-            return INT_MAX - 3 * SCORE_FIVE;
+            return SCORE_KILL_TWO;
         }
         if (player_three_active) {
-            return INT_MIN + 3 * SCORE_FIVE;
+            return -SCORE_KILL_THREE;
         }
         if ((ai_four_sleep && ai_three_active) || ai_three_active >= 2) {
-            return INT_MAX - 3 * SCORE_FIVE;
+            return SCORE_KILL_THREE;
         }
     }
     return (-player_four_active + ai_four_active) * SCORE_FOUR_ACTIVE + (-player_four_sleep + ai_four_sleep) * SCORE_FOUR_SLEEP +

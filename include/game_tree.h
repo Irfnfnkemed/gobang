@@ -18,7 +18,7 @@ public:
     Hash_map hash_map;
     Evaluator evaluator;
     std::vector<Node *> collect;
-    int search_depth;
+    int search_depth, kill_search_depth = 100;
 
     inline void set_alpha_beta(Node *father, Node *son);
 
@@ -45,7 +45,7 @@ public:
 
     bool lose() const;
 
-
+    int get_five_pos() const;
 };
 
 #endif //GOBANG_GAME_TREE_H
