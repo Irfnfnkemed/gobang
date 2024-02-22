@@ -1,3 +1,4 @@
+#include <climits>
 #include "constant.h"
 
 const NODE_CATE MIN_NODE = true;
@@ -17,10 +18,10 @@ const int BOARD_WIDTH = 15;
 const int MIN_POS_ID = 0b00010001;
 const int MAX_POS_ID = 0b11111111;
 
-const int SEARCH_DEPTH = 4;
-const int PLACE_RANGE = 1;
+const int SEARCH_DEPTH = 6;
+const int PLACE_RANGE = 2;
 
-const int SCORE_KILL_ONE = 500000000;
+const int SCORE_KILL_ONE = 500000000 ;
 const int SCORE_KILL_TWO = 30000000;
 const int SCORE_KILL_THREE = 20000000;
 const int SCORE_FIVE = 10000000;
@@ -30,3 +31,6 @@ const int SCORE_THREE_ACTIVE = 3000;
 const int SCORE_THREE_SLEEP = 500;
 const int SCORE_TWO_ACTIVE = 50;
 const int SCORE_TWO_SLEEP = 10;
+
+const int PRUNE_MIN = INT_MIN + 1;
+const int PRUNE_MAX = INT_MAX - 1;

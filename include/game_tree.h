@@ -26,6 +26,10 @@ public:
 
     void free();
 
+    int get_bound(NODE_CATE node_cate, int pos_value);
+
+    bool kill(int score);
+
 public:
     explicit Game_tree(NODE_CATE init_node, int search_depth = SEARCH_DEPTH);
 

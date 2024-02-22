@@ -35,12 +35,10 @@ int Evaluator::evaluate_board(Node *node_) {
     player_three_active = player_three_sleep = player_two_active = player_two_sleep =
     ai_five = ai_four_active = ai_four_sleep =
     ai_three_active = ai_three_sleep = ai_two_active = ai_two_sleep = 0;
-    now_dir = HORIZONTAL;
     for (auto &iter: node->board) {
         for (int i = 0; i < 4; ++i) {
-            set_piece(iter.first);
+            set_piece(iter.first, i);
             evaluate_line();
-            now_dir = (now_dir + 1) % 4;
         }
     }
     score = get_score();
@@ -48,7 +46,7 @@ int Evaluator::evaluate_board(Node *node_) {
     return score;
 }
 
-void Evaluator::set_piece(int now_pos_) {
+void Evaluator::set_piece(int now_pos_, LINE_DIR now_dir) {
     now_pos = now_pos_;
     player_piece = ai_piece = free_piece = 0;
     for (int i = 0; i <= 4; ++i) {

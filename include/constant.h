@@ -38,6 +38,9 @@ extern const int SCORE_THREE_SLEEP;
 extern const int SCORE_TWO_ACTIVE;
 extern const int SCORE_TWO_SLEEP;
 
+extern const int PRUNE_MIN;
+extern const int PRUNE_MAX;
+
 
 
 #endif //GOBANG_CONSTANT_H

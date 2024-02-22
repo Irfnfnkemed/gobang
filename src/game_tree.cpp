@@ -54,6 +54,52 @@ void Game_tree::free() {
     collect.push_back(root);
 }
 
+int Game_tree::get_bound(NODE_CATE node_cate, int pos_value) {
+    int bound;
+    if (node_cate == MAX_NODE) {
+        if (pos_value >= SCORE_FIVE) {
+            bound = SCORE_FIVE;
+        } else if (pos_value >= SCORE_THREE_SLEEP) {
+            bound = SCORE_THREE_SLEEP;
+        } else if (pos_value >= SCORE_TWO_ACTIVE) {
+            bound = SCORE_TWO_ACTIVE;
+        } else if (pos_value >= 0) {
+            bound = 0;
+//        } else if (pos_value >= -SCORE_TWO_ACTIVE) {
+//            bound = -SCORE_TWO_ACTIVE;
+//        } else if (pos_value >= -SCORE_THREE_SLEEP) {
+//            bound = -SCORE_THREE_SLEEP;
+//        } else if (pos_value >= -SCORE_FIVE) {
+//            bound = -SCORE_FIVE;
+        } else {
+            bound = INT_MIN;
+        }
+    } else {
+        if (pos_value <= -SCORE_FIVE) {
+            bound = -SCORE_FIVE;
+        } else if (pos_value <= -SCORE_THREE_SLEEP) {
+            bound = -SCORE_THREE_SLEEP;
+        } else if (pos_value <= -SCORE_TWO_ACTIVE) {
+            bound = -SCORE_TWO_ACTIVE;
+        } else if (pos_value <= 0) {
+            bound = 0;
+//        } else if (pos_value <= SCORE_TWO_ACTIVE) {
+//            bound = SCORE_TWO_ACTIVE;
+//        } else if (pos_value <= SCORE_THREE_SLEEP) {
+//            bound = SCORE_THREE_SLEEP;
+//        } else if (pos_value <= SCORE_FIVE) {
+//            bound = SCORE_FIVE;
+        } else {
+            bound = INT_MAX;
+        }
+    }
+    return bound;
+}
+
+bool Game_tree::kill(int score) {
+    return score == SCORE_KILL_ONE || score == SCORE_KILL_TWO || score == SCORE_KILL_THREE;
+}
+
 bool cmp(Node *a, Node *b) {
     if (a->node_cate == MAX_NODE) {
         return a->pos_value < b->pos_value;
@@ -64,12 +110,15 @@ bool cmp(Node *a, Node *b) {
 
 
 void Game_tree::min_max_search(Node *cur_node, int depth) {
-    if (cur_node->node_value == SCORE_KILL_ONE || cur_node->node_value == -SCORE_KILL_ONE ||
-        cur_node->node_value == SCORE_KILL_TWO || cur_node->node_value == -SCORE_KILL_TWO ||
-        cur_node->node_value == SCORE_KILL_THREE || cur_node->node_value == -SCORE_KILL_THREE) {
+    if (depth > 0 && (kill(cur_node->board_value) || kill(-cur_node->board_value))) {
+        cur_node->alpha = cur_node->beta = cur_node->node_value = cur_node->board_value;
+        hash_map.insert_node_score(cur_node->key, search_depth, cur_node->node_value);
+        return; // kill situation
+    }
+    if (kill(cur_node->node_value) || kill(-cur_node->node_value)) {
         cur_node->alpha = cur_node->beta = cur_node->node_value;
         hash_map.insert_node_score(cur_node->key, search_depth, cur_node->node_value);
-        return;
+        return; // kill situation
     }
     if (depth < search_depth) {
         std::unordered_set<int> son_board_id;
@@ -97,27 +146,23 @@ void Game_tree::min_max_search(Node *cur_node, int depth) {
             cur_node->son.push_back(son_node);
         }
         std::sort(cur_node->son.begin(), cur_node->son.end(), cmp);
-        int bound = INT_MIN;
-        if (cur_node->node_cate == MAX_NODE) {
-            if (cur_node->son[0]->pos_value >= SCORE_FIVE) {
-                bound = SCORE_FIVE;
-            } else if (cur_node->son[0]->pos_value >= SCORE_TWO_ACTIVE) {
-                bound = SCORE_TWO_ACTIVE;
-            } else if (cur_node->son[0]->pos_value >= 0) {
-                bound = 0;
+        int bound = get_bound(cur_node->node_cate, cur_node->son[0]->pos_value);
+        for (int i = 0; i < cur_node->son.size(); ++i) {
+            if (cur_node->node_cate == MAX_NODE) {
+                if (cur_node->son[i]->pos_value < bound) {
+                    cur_node->son.erase(cur_node->son.begin() + i, cur_node->son.end());
+                    break;
+                }
             } else {
-                bound = INT_MIN;
+                if (cur_node->son[i]->pos_value > bound) {
+                    cur_node->son.erase(cur_node->son.begin() + i, cur_node->son.end());
+                    break;
+                }
             }
-        } else {
-            if (cur_node->son[0]->pos_value <= -SCORE_FIVE) {
-                bound = -SCORE_FIVE;
-            } else if (cur_node->son[0]->pos_value <= -SCORE_TWO_ACTIVE) {
-                bound = -SCORE_TWO_ACTIVE;
-            } else if (cur_node->son[0]->pos_value <= 0) {
-                bound = 0;
-            } else {
-                bound = INT_MAX;
-            }
+        }
+        if (depth == 0 && cur_node->son.size() == 1) {
+            next_root = cur_node->son[0];
+            return;
         }
         for (int i = 0; i < cur_node->son.size(); ++i) {
             if (cur_node->node_cate == MAX_NODE) {
@@ -129,7 +174,7 @@ void Game_tree::min_max_search(Node *cur_node, int depth) {
                     break;
                 }
             }
-            if (cur_node->son[i]->node_value == INT_MIN) {
+            if (cur_node->son[i]->node_value == INT_MIN) { // cannot be multiplexed
                 cur_node->son[i]->alpha = cur_node->alpha;
                 cur_node->son[i]->beta = cur_node->beta;
                 min_max_search(cur_node->son[i], depth + 1);
@@ -139,11 +184,16 @@ void Game_tree::min_max_search(Node *cur_node, int depth) {
             set_alpha_beta(cur_node, cur_node->son[i]);
             if (cur_node->alpha >= cur_node->beta && i < cur_node->son.size() - 1) {
                 if (cur_node->node_cate == MAX_NODE) {
-                    cur_node->node_value = cur_node->alpha = cur_node->beta = INT_MAX - 1;
+                    cur_node->node_value = cur_node->alpha = cur_node->beta = PRUNE_MAX;
                 } else {
-                    cur_node->node_value = cur_node->alpha = cur_node->beta = INT_MIN + 1;
+                    cur_node->node_value = cur_node->alpha = cur_node->beta = PRUNE_MIN;
                 }
                 return; // alpha-beta prune
+            }
+            if (kill(cur_node->node_value) || kill(-cur_node->node_value)) {
+                cur_node->alpha = cur_node->beta = cur_node->node_value;
+                hash_map.insert_node_score(cur_node->key, search_depth, cur_node->node_value);
+                return; // kill situation
             }
         }
         if (cur_node->node_cate == MAX_NODE) {
@@ -151,12 +201,14 @@ void Game_tree::min_max_search(Node *cur_node, int depth) {
         } else {
             cur_node->node_value = cur_node->alpha = cur_node->beta;
         }
-        if (cur_node->node_value != INT_MAX - 1 && cur_node->node_value != INT_MIN + 1) {
+        if (cur_node->node_value != PRUNE_MIN && cur_node->node_value != PRUNE_MAX) {
             hash_map.insert_node_score(cur_node->key, search_depth, cur_node->node_value);
         }
+        return;
     } else {
         cur_node->node_value = cur_node->alpha = cur_node->beta = cur_node->board_value;
         hash_map.insert_node_score(cur_node->key, search_depth, cur_node->node_value);
+        return;
     }
 }
 
@@ -177,7 +229,7 @@ void Game_tree::AI_next_status() {
                 break;
             }
         }
-        if (root->node_value == SCORE_KILL_ONE || root->node_value == SCORE_KILL_TWO || root->node_value == SCORE_KILL_THREE) {
+        if (kill(root->node_value)) {
             break;
         }
 

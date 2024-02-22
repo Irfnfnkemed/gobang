@@ -15,7 +15,6 @@ private:
     int ai_piece = 0;
     int free_piece = 0;
     int now_pos = 0;
-    LINE_DIR now_dir = HORIZONTAL;
     int player_five{}, player_four_active{}, player_four_sleep{},
             player_three_active{}, player_three_sleep{}, player_two_active{}, player_two_sleep{};
     int ai_five{}, ai_four_active{}, ai_four_sleep{},
@@ -28,7 +27,7 @@ private:
 
     inline bool match(PIECE_TYPE piece_type, int target_piece, int target_free, int target_occupy) const;
 
-    void set_piece(int now_pos_);
+    void set_piece(int now_pos_,LINE_DIR now_dir);
 
     void evaluate_line();
 
