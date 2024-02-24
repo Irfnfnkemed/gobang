@@ -65,12 +65,12 @@ int Game_tree::get_bound(NODE_CATE node_cate, int pos_value) {
             bound = SCORE_TWO_ACTIVE;
         } else if (pos_value >= 0) {
             bound = 0;
-//        } else if (pos_value >= -SCORE_TWO_ACTIVE) {
-//            bound = -SCORE_TWO_ACTIVE;
-//        } else if (pos_value >= -SCORE_THREE_SLEEP) {
-//            bound = -SCORE_THREE_SLEEP;
-//        } else if (pos_value >= -SCORE_FIVE) {
-//            bound = -SCORE_FIVE;
+        } else if (pos_value >= -SCORE_TWO_ACTIVE) {
+            bound = -SCORE_TWO_ACTIVE;
+        } else if (pos_value >= -SCORE_THREE_SLEEP) {
+            bound = -SCORE_THREE_SLEEP;
+        } else if (pos_value >= -SCORE_FIVE) {
+            bound = -SCORE_FIVE;
         } else {
             bound = INT_MIN;
         }
@@ -83,12 +83,12 @@ int Game_tree::get_bound(NODE_CATE node_cate, int pos_value) {
             bound = -SCORE_TWO_ACTIVE;
         } else if (pos_value <= 0) {
             bound = 0;
-//        } else if (pos_value <= SCORE_TWO_ACTIVE) {
-//            bound = SCORE_TWO_ACTIVE;
-//        } else if (pos_value <= SCORE_THREE_SLEEP) {
-//            bound = SCORE_THREE_SLEEP;
-//        } else if (pos_value <= SCORE_FIVE) {
-//            bound = SCORE_FIVE;
+        } else if (pos_value <= SCORE_TWO_ACTIVE) {
+            bound = SCORE_TWO_ACTIVE;
+        } else if (pos_value <= SCORE_THREE_SLEEP) {
+            bound = SCORE_THREE_SLEEP;
+        } else if (pos_value <= SCORE_FIVE) {
+            bound = SCORE_FIVE;
         } else {
             bound = INT_MAX;
         }
@@ -229,10 +229,16 @@ void Game_tree::AI_next_status() {
                 break;
             }
         }
+        if (kill(-root->node_value)) {
+            std::cout << "give up" << root->node_value << std::endl;
+        }
         if (kill(root->node_value)) {
             break;
         }
-
+        if (root->board.size() >= 2 && min_max_kill(root)) {
+            std::cout << i << std::endl;
+            break;
+        }
     }
     search_depth = max_search_depth;
     for (auto &iter: next_root->board) {
@@ -295,7 +301,7 @@ bool Game_tree::lose() const {
 }
 
 int Game_tree::get_five_pos() const {
-    bool flag = true;
+    bool flag;
     for (auto &iter: root->board) {
         for (int i = 0; i < 4; ++i) {
             flag = true;
@@ -312,3 +318,109 @@ int Game_tree::get_five_pos() const {
         }
     }
 }
+
+bool Game_tree::min_max_kill(Node *cur_node, int depth) {
+    if (kill(-cur_node->board_value)) {
+        return false; // kill situation
+    }
+    if (kill(cur_node->board_value)) {
+        return true; // kill situation
+    }
+    if (depth < kill_search_depth - 1) {
+        std::unordered_set<int> son_board_id;
+        for (auto &it: cur_node->board) {
+            int tmp_x = (it.first) >> 4, tmp_y = (it.first) & 0b1111;
+            for (int i = -PLACE_RANGE; i <= PLACE_RANGE; ++i) {
+                if (tmp_x + i < 1) { continue; }
+                if (tmp_x + i > BOARD_WIDTH) { break; }
+                for (int j = -PLACE_RANGE; j <= PLACE_RANGE; ++j) {
+                    if (tmp_y + j < 1) { continue; }
+                    if (tmp_y + j > BOARD_WIDTH) { break; }
+                    int id = ((tmp_x + i) << 4) | (tmp_y + j);
+                    if (!cur_node->board.count(id)) {
+                        son_board_id.insert(id);
+                    }
+                }
+            }
+        }
+        Node *son_node;
+        for (int pos: son_board_id) {
+            son_node = new_node(cur_node, pos);
+            if (cur_node->node_cate == MAX_NODE) {
+                if (cur_node->player_four_sleep) {
+                    if (!son_node->player_four_sleep) {
+                        cur_node->son.push_back(son_node);
+                    }
+                } else {
+                    if (kill(son_node->board_value)) {
+                        return true; // kill situation
+                    } else if (son_node->ai_four_sleep || son_node->ai_three_active) {
+                        cur_node->son.push_back(son_node);
+                    }
+                }
+            } else {
+                if (cur_node->ai_four_sleep) {
+                    if (!son_node->ai_four_sleep) {
+                        cur_node->son.push_back(son_node);
+                    }
+                } else {
+                    if (son_node->player_four_sleep || !son_node->ai_three_active) {
+                        cur_node->son.push_back(son_node);
+                    }
+                }
+            }
+        }
+        if (cur_node->son.empty()) {
+            return false;
+        }
+        std::sort(cur_node->son.begin(), cur_node->son.end(), cmp);
+        if (cur_node->node_cate == MAX_NODE) {
+            for (auto &iter: cur_node->son) {
+                if (min_max_kill(iter, depth + 1)) {
+                    return true;
+                }
+            }
+            return false;
+        } else {
+            for (auto &iter: cur_node->son) {
+                if (!min_max_kill(iter, depth + 1)) {
+                    return false;
+                }
+            }
+            return true;
+        }
+    } else {
+        return false;
+    }
+}
+
+bool Game_tree::min_max_kill(Node *cur_node) {
+    if (cur_node->son.empty()) {
+        if (!kill(-cur_node->node_value) && cur_node->node_value != PRUNE_MAX &&
+            cur_node->node_value != PRUNE_MIN && cur_node->node_cate == MAX_NODE) {
+            return min_max_kill(cur_node, 0);
+        } else {
+            return false;
+        }
+    } else {
+        if (cur_node->node_cate == MAX_NODE) {
+            for (auto &iter: cur_node->son) {
+                if (min_max_kill(iter)) {
+                    if (cur_node == root) {
+                        next_root = iter;
+                    }
+                    return true;
+                }
+            }
+            return false;
+        } else {
+            for (auto &iter: cur_node->son) {
+                if (!min_max_kill(iter)) {
+                    return false;
+                }
+            }
+            return true;
+        }
+    }
+}
+

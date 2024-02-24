@@ -18,7 +18,7 @@ public:
     Hash_map hash_map;
     Evaluator evaluator;
     std::vector<Node *> collect;
-    int search_depth, kill_search_depth = 100;
+    int search_depth, kill_search_depth = 8;
 
     inline void set_alpha_beta(Node *father, Node *son);
 
@@ -29,6 +29,10 @@ public:
     int get_bound(NODE_CATE node_cate, int pos_value);
 
     bool kill(int score);
+
+    bool min_max_kill(Node *cur_node, int depth);
+
+    bool min_max_kill(Node *cur_node);
 
 public:
     explicit Game_tree(NODE_CATE init_node, int search_depth = SEARCH_DEPTH);

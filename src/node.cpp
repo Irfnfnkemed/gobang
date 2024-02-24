@@ -13,3 +13,11 @@ Node::Node(Node *father, int pos_) {
     alpha = father->alpha;
     beta = father->beta;
 }
+
+Evaluate_node::Evaluate_node(int score_, int player_four_sleep_, int ai_four_sleep_, int ai_three_active_) {
+    score = score_;
+    player_four_sleep = player_four_sleep_;
+    ai_four_sleep = ai_four_sleep_;
+    ai_three_active = ai_three_active_;
+}
+

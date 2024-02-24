@@ -7,6 +7,7 @@ from matplotlib import pyplot as plt
 
 class Interaction:
     def __init__(self):
+        self.round = 1
         self.win = False
         self.last_piece = None
         self.end = False
@@ -61,6 +62,8 @@ class Interaction:
         self.occupy_set.add((self.pos_x << 4) | self.pos_y)
         self.last_piece = plt.Circle((self.pos_x, self.pos_y), radius=0.45, edgecolor='red', facecolor='black' if self.is_player else 'gray')
         self.ax.add_patch(self.last_piece)
+        self.ax.text(self.pos_x, self.pos_y, str(self.round), fontsize=10, color='yellow', ha='center', va='center')
+        self.round += 1
         self.is_player_lock.acquire()
         try:
             self.is_player = not self.is_player

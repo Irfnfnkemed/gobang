@@ -42,7 +42,10 @@ int Evaluator::evaluate_board(Node *node_) {
         }
     }
     score = get_score();
-    hash_map->insert_board_score(node->key, score);
+    hash_map->insert_board_score(node->key, score, player_four_sleep, ai_four_sleep, ai_three_active);
+    node->ai_four_sleep = player_four_sleep;
+    node->ai_four_sleep = ai_four_sleep;
+    node->ai_three_active = ai_three_active;
     return score;
 }
 
@@ -174,7 +177,7 @@ int Evaluator::evaluate_pos(int pos) {
     if (node == nullptr || node->board.size() == 1) {
         return 0;
     }
-    return score - hash_map->find_board(hash_map->get_key(node->key, pos, node->board[pos]));
+    return score - hash_map->find_board(hash_map->get_key(node->key, pos, node->board[pos])).score;
 }
 
 

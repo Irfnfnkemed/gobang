@@ -27,7 +27,7 @@ private:
 
     inline bool match(PIECE_TYPE piece_type, int target_piece, int target_free, int target_occupy) const;
 
-    void set_piece(int now_pos_,LINE_DIR now_dir);
+    void set_piece(int now_pos_, LINE_DIR now_dir);
 
     void evaluate_line();
 

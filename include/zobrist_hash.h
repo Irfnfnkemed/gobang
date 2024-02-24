@@ -12,7 +12,7 @@ private:
     int now_depth = 0;
     long long zobrist[256][2];
     std::unordered_map<long long, std::queue<std::pair<int, int>>> node_score;
-    std::unordered_map<long long, int> board_score;
+    std::unordered_map<long long, Evaluate_node> board_score;
 
 public:
     Hash_map() {
@@ -46,7 +46,7 @@ public:
         }
     }
 
-    int find_board(long long key) {
+    Evaluate_node find_board(long long key) {
         return board_score[key];
     }
 
@@ -54,8 +54,8 @@ public:
         node_score[key].push(std::make_pair(depth + now_depth, value));
     }
 
-    void insert_board_score(long long key, int value) {
-        board_score[key] = value;
+    void insert_board_score(long long key, int value, int play_four_sleep, int ai_four_sleep, int ai_three_active) {
+        board_score[key] = Evaluate_node(value, play_four_sleep, ai_four_sleep, ai_three_active);
     }
 
     void next_step() {
