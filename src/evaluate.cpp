@@ -180,5 +180,25 @@ int Evaluator::evaluate_pos(int pos) {
     return score - hash_map->find_board(hash_map->get_key(node->key, pos, node->board[pos])).score;
 }
 
+int Evaluator::evaluate_kill_danger(Node *node_) {
+    node = node_;
+    player_five = player_four_active = player_four_sleep =
+    player_three_active = player_three_sleep = player_two_active = player_two_sleep =
+    ai_five = ai_four_active = ai_four_sleep =
+    ai_three_active = ai_three_sleep = ai_two_active = ai_two_sleep = 0;
+    for (auto &iter: node->board) {
+        for (int i = 0; i < 4; ++i) {
+            set_piece(iter.first, i);
+            evaluate_line();
+        }
+    }
+    score = get_score();
+    hash_map->insert_board_score(node->key, score, player_four_sleep, ai_four_sleep, ai_three_active);
+    node->ai_four_sleep = player_four_sleep;
+    node->ai_four_sleep = ai_four_sleep;
+    node->ai_three_active = ai_three_active;
+    return 100 * player_four_active + 80 * player_four_sleep + 60 * player_three_active;
+}
+
 
 

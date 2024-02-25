@@ -40,6 +40,8 @@ public:
 
     int evaluate_board(Node *node);
 
+    int evaluate_kill_danger(Node *node);
+
     int evaluate_pos(int pos);
 
 };

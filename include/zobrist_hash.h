@@ -38,8 +38,10 @@ public:
             while (!iter->second.empty()) {
                 if (iter->second.front().first < min_depth) {
                     iter->second.pop();
-                } else {
+                } else if (iter->second.front().first == min_depth) {
                     return iter->second.front().second;
+                } else {
+                    return INT_MIN;
                 }
             }
             return INT_MIN;
@@ -59,7 +61,7 @@ public:
     }
 
     void next_step() {
-        ++now_depth;
+        now_depth += 2;
     }
 
 //    bool erase(long long key) {

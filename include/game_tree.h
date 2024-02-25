@@ -13,12 +13,13 @@
 
 class Game_tree {
 public:
-    Node *root, *next_root = nullptr;
+    Node *root, *next_root;
+    std::vector<Node *> next_root_list;
     int next_pos;
     Hash_map hash_map;
     Evaluator evaluator;
     std::vector<Node *> collect;
-    int search_depth, kill_search_depth = 8;
+    int search_depth, kill_search_depth = 6;
 
     inline void set_alpha_beta(Node *father, Node *son);
 
@@ -45,7 +46,7 @@ public:
 
     void player_next_status(int pos); // player selection
 
-    void print_board();
+    void print_board() const;
 
     int get_pos() const;
 
@@ -54,6 +55,7 @@ public:
     bool lose() const;
 
     int get_five_pos() const;
+
 };
 
 #endif //GOBANG_GAME_TREE_H
